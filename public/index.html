@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dead Rails Tierlists</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/index.css"/>
+</head>
+<body class="bg-zinc-900 text-white min-h-screen font-sans">
+
+  <nav class="sticky top-0 bg-zinc-950 shadow-md z-10">
+    <div class="flex justify-center gap-4 p-4 text-sm font-medium">
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Turrets">Turrets</button>
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Classes">Classes</button>
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Guns">Guns</button>
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Melees">Melees</button>
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Trains">Trains</button>
+      <button class="tab-button transition hover:text-cyan-400" data-tab="Liquids">Liquids</button>
+    </div>
+  </nav>
+
+  <h1 class="text-4xl font-bold text-center mt-10 mb-6">🛤️ Dead Rails Tierlists</h1>
+
+  <div class="relative px-4" id="tierlists"></div>
+
+  <script>
+    function createTierlist(title, data) {
+      const container = document.getElementById("tierlists");
+
+      const wrapper = document.createElement("div");
+      wrapper.className = `tierlist-card hidden fade-in`;
+      wrapper.dataset.tab = title;
+
+      const heading = document.createElement("h2");
+      heading.className = "text-3xl font-semibold mb-4 border-b border-zinc-700 pb-2";
+      heading.textContent = title;
+
+      const controls = document.createElement("div");
+      controls.className = "mb-3 flex items-center gap-3";
+
+      const columns = Object.keys(data[0]);
+      const select = document.createElement("select");
+      select.className = "bg-zinc-700 text-white p-1 rounded";
+
+      columns.forEach((col) => {
+        const option = document.createElement("option");
+        option.value = col;
+        option.textContent = col;
+        select.appendChild(option);
+      });
+      controls.appendChild(select);
+
+      const sortOrderBtn = document.createElement("button");
+      sortOrderBtn.textContent = "⬆️";
+      sortOrderBtn.className = "px-2 rounded bg-zinc-700 hover:bg-zinc-600";
+      controls.appendChild(sortOrderBtn);
+
+      const table = document.createElement("table");
+      table.className = "table-auto w-full border-collapse text-sm rounded-lg overflow-hidden";
+
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr class="bg-zinc-700 text-left">
+          ${columns.map((key) => `<th class="p-3 uppercase tracking-wide">${key}</th>`).join("")}
+        </tr>
+      `;
+
+      const tbody = document.createElement("tbody");
+
+      function renderTableBody(sortedData) {
+        tbody.innerHTML = "";
+        sortedData.forEach((entry) => {
+          const row = document.createElement("tr");
+          row.className = "odd:bg-zinc-800 even:bg-zinc-900 transition hover:bg-zinc-700";
+
+          Object.entries(entry).forEach(([key, val]) => {
+            const td = document.createElement("td");
+            td.className = "p-3";
+
+            if (key.toLowerCase().includes("total")) {
+              if (val >= 7) td.classList.add("text-green-400");
+              else if (val >= 4) td.classList.add("text-yellow-400");
+              else td.classList.add("text-red-400");
+            }
+
+            td.textContent = val;
+            row.appendChild(td);
+          });
+
+          tbody.appendChild(row);
+        });
+      }
+
+      let ascending = true;
+
+      function sortAndRender() {
+        const col = select.value;
+        const sorted = [...data].sort((a, b) => {
+          let vA = a[col];
+          let vB = b[col];
+          const nA = Number(vA);
+          const nB = Number(vB);
+          if (!isNaN(nA) && !isNaN(nB)) {
+            vA = nA;
+            vB = nB;
+          } else {
+            vA = String(vA).toLowerCase();
+            vB = String(vB).toLowerCase();
+          }
+          return ascending ? (vA > vB ? 1 : vA < vB ? -1 : 0) : vA < vB ? 1 : vA > vB ? -1 : 0;
+        });
+        renderTableBody(sorted);
+      }
+
+      select.addEventListener("change", () => {
+        sortAndRender();
+      });
+
+      sortOrderBtn.addEventListener("click", () => {
+        ascending = !ascending;
+        sortOrderBtn.textContent = ascending ? "⬆️" : "⬇️";
+        sortAndRender();
+      });
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      wrapper.appendChild(heading);
+      wrapper.appendChild(controls);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+
+      if (document.querySelectorAll(".tierlist-card:not(.hidden)").length === 0) {
+        wrapper.classList.remove("hidden");
+        document.querySelectorAll(".tab-button").forEach((btn) => btn.classList.remove("text-cyan-400"));
+        const firstTabBtn = document.querySelector(`.tab-button[data-tab="${title}"]`);
+        if (firstTabBtn) firstTabBtn.classList.add("text-cyan-400");
+      }
+
+      sortAndRender();
+    }
+  </script>
+
+  <script>
+    const tierFiles = [
+      "turrets",
+      "classes",
+      "guns",
+      "melees",
+      "trains",
+      "liquids"
+    ];
+
+    tierFiles.forEach((file) => {
+      const script = document.createElement("script");
+      script.src = `js/${file}.js`;
+      document.body.appendChild(script);
+    });
+  </script>
+
+  <script>
+    document.addEventListener("click", (e) => {
+      if (!e.target.matches(".tab-button")) return;
+
+      const target = e.target.dataset.tab;
+
+      document.querySelectorAll(".tierlist-card").forEach((el) => {
+        el.classList.toggle("hidden", el.dataset.tab !== target);
+      });
+
+      document.querySelectorAll(".tab-button").forEach((btn) => {
+        btn.classList.remove("text-cyan-400");
+      });
+      e.target.classList.add("text-cyan-400");
+    });
+  </script>
+
+</body>
+</html>
 
