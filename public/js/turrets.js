@@ -3,7 +3,7 @@ const turretsDataRaw = [
     Turret: "Cannon",
     Damage: 375,
     "Crit Damage": 375,
-    "Fire Rate": 6, 
+    "Fire Rate": 6,
     "AOE Type": "Circle AOE",
     "AOE Size": 10,
     Range: 6,
@@ -46,7 +46,7 @@ const turretsDataRaw = [
 ];
 
 function normalize(value, min, max) {
-  if (max === min) return 1; 
+  if (max === min) return 1;
   return (value - min) / (max - min);
 }
 
@@ -68,11 +68,9 @@ function calculateTotalScores(data) {
   const minRange = Math.min(...rangeVals);
   const maxRange = Math.max(...rangeVals);
 
-  data.forEach(turret => {
-    // Normalize all numeric fields
+  return data.map(turret => {
     const normDamage = normalize(turret.Damage, minDamage, maxDamage);
     const normCrit = normalize(turret["Crit Damage"], minCrit, maxCrit);
-    // For fire rate: lower is better, so invert normalization
     const normFireRate = 1 - normalize(turret["Fire Rate"], minFireRate, maxFireRate);
     const normAoeSize = normalize(turret["AOE Size"], minAoeSize, maxAoeSize);
     const normRange = normalize(turret.Range, minRange, maxRange);
@@ -81,18 +79,22 @@ function calculateTotalScores(data) {
     if (turret["AOE Type"] === "Circle AOE") aoeMultiplier = 1.1;
     else if (turret["AOE Type"] === "Line AOE") aoeMultiplier = 1.05;
 
-    const totalScoreRaw =
-      (normDamage * 0.4) +
-      (normCrit * 0.2) +
-      (normFireRate * 0.2) +
-      (normAoeSize * 0.1) +
-      (normRange * 0.1);
+    const totalScoreRaw = (normDamage * 0.4) + (normCrit * 0.2) + (normFireRate * 0.2) + (normAoeSize * 0.1) + (normRange * 0.1);
+    const totalScore = (totalScoreRaw * aoeMultiplier * 10).toFixed(2);
 
-    turret["Total Score"] = (totalScoreRaw * aoeMultiplier * 10).toFixed(2);
-
-    turret["Requires Weld?"] = turret["Requires Weld?"] === "TRUE" ? "Yes" : "No";
+    return {
+      Turret: turret.Turret,
+      Damage: turret.Damage,
+      "Crit Damage": turret["Crit Damage"],
+      "Fire Rate": turret["Fire Rate"],
+      "AOE Type": turret["AOE Type"],
+      "AOE Size": turret["AOE Size"],
+      Range: turret.Range,
+      "Requires Weld?": turret["Requires Weld?"] === "TRUE" ? "Yes" : "No",
+      "Total Score": totalScore,
+      Notes: turret.Notes
+    };
   });
-  return data;
 }
 
 const turretsData = calculateTotalScores(turretsDataRaw);
