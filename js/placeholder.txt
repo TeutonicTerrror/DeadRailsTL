@@ -1,0 +1,1 @@
+All Javascript Renders will be placed in this folder
